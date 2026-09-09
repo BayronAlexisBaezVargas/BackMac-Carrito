@@ -17,9 +17,11 @@ import java.util.UUID;
 public class CarritoController {
 
     private final CarritoService carritoService;
+    private static final String ROL_REQUERIDO = "access_as_user";
 
     @GetMapping
     public ResponseEntity<Carrito> obtenerCarrito(@RequestHeader("Authorization") String token) {
+        JwtUtils.validarRol(token, ROL_REQUERIDO);
         String usuarioId = JwtUtils.extraerUsuarioId(token);
         return ResponseEntity.ok(carritoService.obtenerCarrito(usuarioId));
     }
@@ -28,6 +30,7 @@ public class CarritoController {
     public ResponseEntity<Carrito> agregarItem(
             @RequestHeader("Authorization") String token,
             @Valid @RequestBody ItemCarritoDTO itemDTO) {
+        JwtUtils.validarRol(token, ROL_REQUERIDO);
         String usuarioId = JwtUtils.extraerUsuarioId(token);
         return ResponseEntity.ok(carritoService.agregarItem(usuarioId, itemDTO));
     }
@@ -37,6 +40,7 @@ public class CarritoController {
             @RequestHeader("Authorization") String token,
             @PathVariable UUID productoId,
             @RequestParam Integer cantidad) {
+        JwtUtils.validarRol(token, ROL_REQUERIDO);
         String usuarioId = JwtUtils.extraerUsuarioId(token);
         return ResponseEntity.ok(carritoService.actualizarCantidad(usuarioId, productoId, cantidad));
     }
@@ -45,12 +49,14 @@ public class CarritoController {
     public ResponseEntity<Carrito> removerItem(
             @RequestHeader("Authorization") String token,
             @PathVariable UUID productoId) {
+        JwtUtils.validarRol(token, ROL_REQUERIDO);
         String usuarioId = JwtUtils.extraerUsuarioId(token);
         return ResponseEntity.ok(carritoService.removerItem(usuarioId, productoId));
     }
 
     @DeleteMapping
     public ResponseEntity<Void> vaciarCarrito(@RequestHeader("Authorization") String token) {
+        JwtUtils.validarRol(token, ROL_REQUERIDO);
         String usuarioId = JwtUtils.extraerUsuarioId(token);
         carritoService.vaciarCarrito(usuarioId);
         return ResponseEntity.noContent().build();

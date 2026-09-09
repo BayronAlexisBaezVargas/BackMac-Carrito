@@ -1,37 +1,37 @@
 package backmac.carrito.util;
 
 import backmac.carrito.exception.UnauthorizedException;
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.util.Base64;
+import java.util.List;
+import java.util.ArrayList;
 
 public class JwtUtils {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
 
+    private static JsonNode decodificarPayload(String token) throws Exception {
+        if (token != null && token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+        String[] partes = token.split("\\.");
+        if (partes.length < 2) {
+            throw new UnauthorizedException("Token JWT invalido o malformado");
+        }
+        String base64Payload = partes[1];
+        while (base64Payload.length() % 4 != 0) {
+            base64Payload += "=";
+        }
+        String payload = new String(Base64.getUrlDecoder().decode(base64Payload));
+        return objectMapper.readTree(payload);
+    }
+
     public static String extraerUsuarioId(String token) {
         try {
-            // Remover "Bearer " si viene incluido
-            if (token != null && token.startsWith("Bearer ")) {
-                token = token.substring(7);
-            }
-
-            // Un JWT tiene 3 partes separadas por puntos: header.payload.signature
-            String[] partes = token.split("\\.");
-            if (partes.length < 2) {
-                throw new UnauthorizedException("Token JWT inválido o malformado");
-            }
-
-            String base64Payload = partes[1];
-            while (base64Payload.length() % 4 != 0) {
-                base64Payload += "=";
-            }
-            String payload = new String(Base64.getUrlDecoder().decode(base64Payload));
+            JsonNode jsonNode = decodificarPayload(token);
             
-            JsonNode jsonNode = objectMapper.readTree(payload);
-            
-            // Generalmente el ID del usuario viene en "sub" (subject) o "email", o "oid" (Azure AD)
             if (jsonNode.has("sub")) {
                 return jsonNode.get("sub").asText();
             } else if (jsonNode.has("email")) {
@@ -47,7 +47,32 @@ public class JwtUtils {
         } catch (UnauthorizedException e) {
             throw e;
         } catch (Exception e) {
-            throw new UnauthorizedException("Error al decodificar el token de autenticación");
+            throw new UnauthorizedException("Error al decodificar el token de autenticacion");
+        }
+    }
+
+    public static void validarRol(String token, String rolRequerido) {
+        try {
+            JsonNode jsonNode = decodificarPayload(token);
+            List<String> roles = new ArrayList<>();
+            
+            // Azure AD usa "roles" o "scp" para los scopes
+            if (jsonNode.has("roles")) {
+                jsonNode.get("roles").forEach(rol -> roles.add(rol.asText()));
+            } else if (jsonNode.has("scp")) {
+                String[] scpRoles = jsonNode.get("scp").asText().split(" ");
+                for (String r : scpRoles) roles.add(r);
+            }
+            
+            // Verificacion estricta de rol
+            if (!roles.contains(rolRequerido)) {
+                throw new UnauthorizedException("Acceso denegado: Se requiere el rol " + rolRequerido);
+            }
+            
+        } catch (UnauthorizedException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new UnauthorizedException("Error al validar roles del token de autenticacion");
         }
     }
 }
