@@ -25,6 +25,7 @@ public class JwtUtils {
             base64Payload += "=";
         }
         String payload = new String(Base64.getUrlDecoder().decode(base64Payload));
+        System.out.println("DEBUG JWT Payload: " + payload);
         return objectMapper.readTree(payload);
     }
 
@@ -65,7 +66,9 @@ public class JwtUtils {
             }
             
             // Verificacion estricta de rol
-            if (!roles.contains(rolRequerido)) {
+            boolean tieneRol = roles.stream().anyMatch(r -> r.contains(rolRequerido));
+            if (!tieneRol) {
+                System.out.println("Roles en el token: " + roles + " | Esperado: " + rolRequerido);
                 throw new UnauthorizedException("Acceso denegado: Se requiere el rol " + rolRequerido);
             }
             

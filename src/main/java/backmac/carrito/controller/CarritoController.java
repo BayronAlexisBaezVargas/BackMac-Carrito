@@ -17,7 +17,7 @@ import java.util.UUID;
 public class CarritoController {
 
     private final CarritoService carritoService;
-    private static final String ROL_REQUERIDO = "access_as_user";
+    private static final String ROL_REQUERIDO = "read-write";
 
     @GetMapping
     public ResponseEntity<Carrito> obtenerCarrito(@RequestHeader("Authorization") String token) {
