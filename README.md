@@ -105,3 +105,6 @@ Elimina todos los ítems almacenados en el carrito del usuario, reiniciando su e
 - **Ruta:** `/api/carrito`
 - **Respuestas Esperadas:**
   - `204 No Content`: El carrito ha sido vaciado exitosamente.
+
+## Versión Actual: 2.0.1
+- Soporte para configuración de URL del servicio productos vía variable de entorno.

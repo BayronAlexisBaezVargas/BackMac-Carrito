@@ -21,4 +21,4 @@ server:
 
 productos:
   service:
-    url: http://host.docker.internal:8081/api/productos
+    url: ${PRODUCTOS_SERVICE_URL:http://localhost:8081/api/productos}
